@@ -161,7 +161,7 @@ class Application:
         #print(indivuals)
 
         for i in range(len(least_value)):
-            if(random.random() > 0.6):
+            if(random.random() < 0.6):
                 if(least_value[i] == 0):
                     least_value[i] = 1
                 else:
