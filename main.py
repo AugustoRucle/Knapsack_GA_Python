@@ -1,4 +1,5 @@
 import pygubu
+import random
 import numpy as np
 import tkinter as tk 
 from tkinter import messagebox as msg
@@ -72,11 +73,12 @@ class Application:
         
     def start_generic_algorithms(self, size_chromosome, main_weight, amoun_population):
         bandera = True
-        
+
+        #Initial population
+        population = self.create_population(size_chromosome, main_weight)
+        individuals = self.create_individuals(size_chromosome, amoun_population)
+
         while (bandera):
-            #Initial population
-            population = self.create_population(size_chromosome, main_weight)
-            individuals = self.create_individuals(size_chromosome, amoun_population)
 
             #Fitness function
             individuals = self.get_individuals_converted(population, individuals)
@@ -146,12 +148,21 @@ class Application:
         
         # print('\n\nIndivuals actuales')
         # print(indivuals)
-        
-        for i in range(5):
-            if(least_value[i] == 0):
-                least_value[i] = 1
-            else:
-                least_value[i] = 0
+
+        for i in range(len(least_value)):
+            if(random.random() > 0.6):
+                if(least_value[i] == 0):
+                    least_value[i] = 1
+                else:
+                    least_value[i] = 0
+
+        for i in range(len(indivuals)):
+            for j in range(len(least_value)):
+                if(random.random() > 0.5):
+                    if(indivuals[i][j] == 0):
+                        indivuals[i][j] = 1
+                    else:
+                        indivuals[i][j] = 0
 
         indivuals.append(least_value)
 
