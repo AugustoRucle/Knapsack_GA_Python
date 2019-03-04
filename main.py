@@ -3,6 +3,9 @@ import random
 import numpy as np
 import tkinter as tk 
 from tkinter import messagebox as msg
+import matplotlib.pyplot as plt
+
+sumador = []
 
 class Application:
     def __init__(self, master):
@@ -116,12 +119,18 @@ class Application:
                 # print('Indivuals fitness')
                 # print(individuals)
         print('T')
+        print(sumador)
+        plt.plot(sumador)
+        sumador.clear()
+        plt.show()
 
     def get_fitness(self, indivuals, main_weight, sum_population):
         amount_indivuals = len(indivuals)
         individuals_fitness = []
         for i in range(amount_indivuals):
             sum_indivuals = sum(indivuals[i][1])
+            #print(sum_indivuals)
+            sumador.append(sum_indivuals)
             if(sum_indivuals <= main_weight):
                 fitness = 1 - (((main_weight - sum_indivuals) / main_weight)**0.5)
             else:
@@ -131,6 +140,8 @@ class Application:
                 fitness = 1 - quotient     
 
             individuals_fitness.append((indivuals[i][0], indivuals[i][1], fitness))
+            #print(indivuals[i][1])
+            #print(sumador)
         return individuals_fitness
     
     def crossover(self, indivuals):
@@ -146,8 +157,8 @@ class Application:
 
     def mutation(self, least_value, indivuals):
         
-        # print('\n\nIndivuals actuales')
-        # print(indivuals)
+        #print('\n\nIndivuals actuales')
+        #print(indivuals)
 
         for i in range(len(least_value)):
             if(random.random() > 0.6):
