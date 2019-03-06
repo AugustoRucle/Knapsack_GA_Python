@@ -2,6 +2,7 @@ import pygubu
 import random
 import numpy as np
 import tkinter as tk 
+import matplotlib.pyplot as plt
 from tkinter import messagebox as msg
 
 class Application:
@@ -38,7 +39,7 @@ class Application:
             return False
 
     def create_population(self, size_chromosome, main_weight):
-        return np.random.randint(low=10, high=main_weight-100, size=size_chromosome)
+        return np.random.randint(low=1, high=main_weight*0.5, size=size_chromosome)
 
     def create_individuals(self, size_chromosome, amoun_population):
         flag, exit_zero = True, False
@@ -72,23 +73,22 @@ class Application:
         return individuals_converted_list
         
     def start_generic_algorithms(self, size_chromosome, main_weight, amoun_population):
-        bandera = True
-
+        bandera, generation = True, 0
+        list_fitness = []
         #Initial population
         population = self.create_population(size_chromosome, main_weight)
         individuals = self.create_individuals(size_chromosome, amoun_population)
 
         while (bandera):
-
+            generation += 1
             #Fitness function
             individuals = self.get_individuals_converted(population, individuals)
             individuals = self.get_fitness(individuals, main_weight, sum(population))
             individuals.sort(key = lambda x: x[2], reverse=True)   
-            
-            print('h')
+
+            list_fitness.append(individuals[0][2])
 
             if(individuals[0][2] >= 0.8):
-                print('Bv: {}'.format(individuals[0]))
                 bandera = False
             else:
                 # print('Indivuals')
@@ -115,7 +115,10 @@ class Application:
 
                 # print('Indivuals fitness')
                 # print(individuals)
-        print('T')
+        
+        self.draw_chart(list_fitness, generation)
+        print('Generacions: {}'.format(generation))
+        print('Termine')
 
     def get_fitness(self, indivuals, main_weight, sum_population):
         amount_indivuals = len(indivuals)
@@ -168,6 +171,25 @@ class Application:
 
         return indivuals
 
+    def draw_chart(self, list_fitness, amount_generation):
+        amount_generation = len(list_fitness)
+        list_generation = []
+
+        for i in range(amount_generation):
+            list_generation.append(i+1)
+
+        value_min = min(list_fitness)
+        value_max = max(list_fitness)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        plt.title('Valor de la media')
+        plt.xlabel('Generaciones')
+        plt.ylabel('Fitness')
+        ax.set_ylim(bottom=value_min, top=value_max)
+        plt.plot(list_generation, list_fitness, 'go-')
+        plt.legend(loc='upper left')
+        plt.show()
 
 if __name__ == '__main__':
     root = tk.Tk()
