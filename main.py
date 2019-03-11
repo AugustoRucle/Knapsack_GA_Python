@@ -118,18 +118,10 @@ class Application:
 
                 # print('Indivuals fitness')
                 # print(individuals)
-<<<<<<< HEAD
         
         self.draw_chart(list_fitness, generation)
         print('Generacions: {}'.format(generation))
         print('Termine')
-=======
-        print('T')
-        print(sumador)
-        plt.plot(sumador)
-        sumador.clear()
-        plt.show()
->>>>>>> 0f769fa89ea242bcc5af47ab11c726d3b71dee4a
 
     def get_fitness(self, indivuals, main_weight, sum_population):
         amount_indivuals = len(indivuals)

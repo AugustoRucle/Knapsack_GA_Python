@@ -80,7 +80,7 @@ class Application:
         
     def start_generic_algorithms(self, size_chromosome, main_weight, amoun_population, amount_generation = 100):
         flag, generation, i = True, 0, 0
-        list_fitness, list_fiteness_wrong, list_fitness_mean = [], [], []
+        list_fitness = []
         #Initial population
         population = self.create_population(size_chromosome, main_weight)
 
@@ -122,22 +122,12 @@ class Application:
             individuals = individuals + children
 
             individuals.sort(key = lambda x: x[1], reverse=True)   
-            aux_individuals = list(map(lambda x: x[1], individuals))
 
-
-            # print('Max: {}'.format(max(aux_individuals)))
-            # print('Min: {}'.format(min(aux_individuals)))
-            # print('Promedio: {}'.format(sum(aux_individuals)/len(aux_individuals)))
-            
-            
             individuals = individuals[:10]
-            generation += 1
-            list_fitness.append(max(aux_individuals))
-            list_fiteness_wrong.append(min(aux_individuals))
-            list_fitness_mean.append(sum(aux_individuals)/len(aux_individuals))
 
-
-            if(max(aux_individuals) >= 0.8):
+            list_fitness.append(individuals[0][1])
+            
+            if(individuals[0][1] >= 0.8):
                 flag = False
             else:
                 individuals = list(map(lambda x: x[0], individuals))
@@ -146,16 +136,11 @@ class Application:
             # # self.print_indivuals(individuals)
             # print(individuals)
 
-        print('M: {}'.format(len(list_fitness)))
-        print('m: {}'.format(len(list_fiteness_wrong)))
-        print('X: {}'.format(len(list_fitness_mean)))
-
         print('Better fitness: {}'.format(max(list_fitness)))
         print('Generacions: {}'.format(generation))
         print('s: {}'.format(len(list_fitness)))
         print('Termine')
         self.draw_chart(list_fitness, generation)
-        self.draw_chart_all(list_fitness_mean, list_fitness, list_fiteness_wrong, generation)
     def get_fitness(self, indivuals, main_weight, sum_population):
         amount_indivuals = len(indivuals)
         individuals_fitness = []
@@ -335,34 +320,6 @@ class Application:
         plt.ylabel('Fitness')
         ax.set_ylim(bottom=value_min, top=value_max)
         plt.plot(list_generation, list_fitness, 'go-')
-        plt.legend(loc='upper left')
-        plt.show()
-
-    def draw_chart_all(self, list_media, list_media_mejor, list_media_peor, CANTIDAD_GENERACIONES):
-        lista_generaciones = []
-
-        #print('Cantidad:{}, CANTIDAD_MEDIA: {} '.format(CANTIDAD_GENERACIONES, CANTIDAD_MEDIA))
-
-        for i in range(CANTIDAD_GENERACIONES):
-            lista_generaciones.append(i+1)
-
-        print('CG: {}'.format(lista_generaciones))
-
-        #print('Min: {}'.format(min(list_media_mejor + list_media_peor + list_media)))
-        #print('Max: {}'.format(max(list_media_mejor + list_media_peor + list_media)))
-
-        valor_minimo = min(list_media_peor)
-        valor_maximo = max(list_media_mejor)
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.title('Valor de la media')
-        plt.xlabel('Generaciones')
-        plt.ylabel('Fitness')
-        ax.set_ylim(bottom=valor_minimo, top=valor_maximo)
-        plt.plot(lista_generaciones, list_media_peor, 'ro-', label='Peores individuos')
-        plt.plot(lista_generaciones, list_media_mejor, 'go-', label='Mejores individuos')
-        plt.plot(lista_generaciones, list_media,'bo-', label='Promedios individuos')
         plt.legend(loc='upper left')
         plt.show()
 
