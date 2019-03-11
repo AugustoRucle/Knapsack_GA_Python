@@ -154,7 +154,7 @@ class Application:
         print('Generacions: {}'.format(generation))
         print('s: {}'.format(len(list_fitness)))
         print('Termine')
-        self.draw_chart(list_fitness, generation)
+        # self.draw_chart(list_fitness, generation)
         self.draw_chart_all(list_fitness_mean, list_fitness, list_fiteness_wrong, generation)
     def get_fitness(self, indivuals, main_weight, sum_population):
         amount_indivuals = len(indivuals)

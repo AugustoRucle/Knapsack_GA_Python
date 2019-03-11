@@ -185,8 +185,8 @@ class Application:
         for i in range(amount_generation):
             list_generation.append(i+1)
 
-        value_min = min(list_fitness)
-        value_max = max(list_fitness)
+        valor_minimo = min(list_media_mejor + list_media_peor + list_media)
+        valor_maximo = max(list_media_mejor + list_media_peor + list_media)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
