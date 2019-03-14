@@ -42,7 +42,7 @@ class Application:
             return False
 
     def create_population(self, size_chromosome, main_weight):
-        return np.random.randint(low=1, high=main_weight*0.8, size=size_chromosome)
+        return np.random.randint(low=1, high=main_weight-100, size=size_chromosome)
 
     def create_individuals(self, size_chromosome, amoun_population):
         flag, exit_zero = True, False
@@ -81,7 +81,7 @@ class Application:
         #Initial population
         population = self.create_population(size_chromosome, main_weight)
         individuals = self.create_individuals(size_chromosome, amoun_population)
-
+        
         while (bandera and i < 100):
             generation += 1
             #Fitness function
@@ -93,7 +93,7 @@ class Application:
             better_indivuals, wrong_indivuals =  self.selection(individuals)
 
             #Crossover better
-            children = self.aux_crossover(better_indivuals)
+            children = self.crossover(better_indivuals)
 
             if(len(children) > 0):
                 children = self.get_individuals_converted(population, children)
@@ -122,6 +122,7 @@ class Application:
             individuals = individuals[0:20]
 
             if(individuals[0][2] >= 0.8):
+                print('Better: {}'.format(individuals[0]))
                 bandera = False
             else:
                 individuals = list(map(lambda x: x[0], individuals))
@@ -138,7 +139,6 @@ class Application:
         for i in range(amount_indivuals):
             sum_indivuals = sum(indivuals[i][1])
             #print(sum_indivuals)
-            sumador.append(sum_indivuals)
             if(sum_indivuals <= main_weight):
                 fitness = 1 - (((main_weight - sum_indivuals) / main_weight)**0.5)
             else:
@@ -148,8 +148,6 @@ class Application:
                 fitness = 1 - quotient     
 
             individuals_fitness.append((indivuals[i][0], indivuals[i][1], fitness))
-            #print(indivuals[i][1])
-            #print(sumador)
         return individuals_fitness
     
     def selection(self, indivuals):
@@ -188,23 +186,17 @@ class Application:
 
         return aux_individuals[0], aux_individuals[1:]
 
-    def aux_crossover(self, list_individuals):
+    def crossover(self, list_individuals):
         LENGTH_LIST = len(list_individuals)
         children = []
 
         for i in range (LENGTH_LIST-1):
             binaries_father, _, _ = list_individuals[i]
             binaries_mother, _, _ = list_individuals[i+1] 
-            
-            children.append(self.crossover(binaries_father, binaries_mother))
+            third_indivual = np.concatenate((binaries_father[:8], binaries_mother[8:]), axis = 0)
+            children.append(third_indivual)
 
         return children
-
-    def crossover(self, first_indivual, second_indivual):
-        aux_indivuals = []
-        third_indivual = np.concatenate((first_indivual[:8], second_indivual[8:]), axis = 0)
-
-        return third_indivual
 
     def mutation(self, indivuals):
 
@@ -214,11 +206,12 @@ class Application:
             binarios, _, fitness = indivuals[i]
             size_candidato = len(binarios)
             for j in range(size_candidato):
-                if(fitness > random.random()):
-                    if(binarios[j] == 0):
-                        binarios[j] = 1
+                position = random.randint(0,size_candidato-1)
+                if(0.6 > random.random()):
+                    if(binarios[position] == 0):
+                        binarios[position] = 1
                     else:
-                        binarios[j] = 0
+                        binarios[position] = 0
 
             aux_individuals.append(binarios)
 

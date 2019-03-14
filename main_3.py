@@ -4,7 +4,9 @@ import numpy as np
 import tkinter as tk 
 import matplotlib.pyplot as plt
 from tkinter import messagebox as msg
-import time;
+import matplotlib.pyplot as plt
+
+sumador = []
 
 class Application:
     def __init__(self, master):
@@ -13,7 +15,7 @@ class Application:
         self.builder = builder = pygubu.Builder()
 
         #2: Load an ui file
-        builder.add_from_file('UI.ui')
+        builder.add_from_file('UI_3.ui')
 
         #3: Create the widget using a master as parent
         self.mainwindow = builder.get_object('AG', master)
@@ -24,13 +26,12 @@ class Application:
         size_chromosome = int(self.builder.get_variable('size_knapsack').get())
         main_weight = int(self.builder.get_variable('main_weight').get())
         amoun_population = int(self.builder.get_variable('amount_population').get())  
-        amount_generation = int(self.builder.get_variable('amount_generation').get())  
 
         if(self.get_values_main(size_chromosome, main_weight, amoun_population)):
             msg.showerror("Error", "Valores faltantes")
         else:
             if(main_weight >= 300 ):
-                self.start_generic_algorithms(size_chromosome, main_weight, amoun_population, amount_generation)
+                self.start_generic_algorithms(size_chromosome, main_weight, amoun_population)
             else:
                 msg.showwarning("Warning","Ingresa una cantidad mayor a 100")
 
@@ -41,7 +42,7 @@ class Application:
             return False
 
     def create_population(self, size_chromosome, main_weight):
-        return np.random.randint(low=10, high=main_weight-100, size=size_chromosome)
+        return np.random.randint(low=1, high=main_weight-100, size=size_chromosome)
 
     def create_individuals(self, size_chromosome, amoun_population):
         flag, exit_zero = True, False
@@ -68,100 +69,76 @@ class Application:
         for i in range(amount_indivuals):
             individual_converted = []
             for j in range(lenght_population):
-                # print('ALL GENE: {}'.format(individuals))
-                # print('\n')
-                # print('ALL-GENE-2: {}'.format(individuals[i]))
-                # print('\n')
                 gen = individuals[i][j]
-                # print('Gen: {} \n'.format(gen))
                 if(gen == 1):
                     individual_converted.append(population[j])
             individuals_converted_list.append(( individuals[i], individual_converted ))
         return individuals_converted_list
         
-    def start_generic_algorithms(self, size_chromosome, main_weight, amoun_population, amount_generation = 100):
-        flag, generation, i = True, 0, 0
+    def start_generic_algorithms(self, size_chromosome, main_weight, amoun_population):
+        bandera, generation, i = True, 0, 0
         list_fitness, list_fiteness_wrong, list_fitness_mean = [], [], []
         #Initial population
         population = self.create_population(size_chromosome, main_weight)
-
-        
         individuals = self.create_individuals(size_chromosome, amoun_population)
 
-        while(flag and (i < amount_generation)):
-            i += 1
+        while (bandera and i < 100):
+            generation += 1
             #Fitness function
             individuals = self.get_individuals_converted(population, individuals)
             individuals = self.get_fitness(individuals, main_weight, sum(population))
-            individuals.sort(key = lambda x: x[1], reverse=True)   
+            individuals.sort(key = lambda x: x[2], reverse=True)   
 
-            # print('Indivuals')
-            # # self.print_indivuals(individuals)
-            # print(individuals)
-            # print('\n\n')
+            #Selection
+            better_indivuals, wrong_indivuals =  self.selection(individuals)
 
-            #Crossover
-            children = self.crossover(individuals)
+            #Crossover better
+            children = self.crossover(better_indivuals)
 
-            print('\n\nHijos')
-            print(children)
-
-            #Mutacion
-            children = self.mutacion(children, 0.8, 0.8)
+            if(len(children) > 0):
+                children = self.get_individuals_converted(population, children)
+                children = self.get_fitness(children, main_weight, sum(population))
             
-            # print('\n\nHijos-mutados')
-            # print(children)
 
-            children = self.get_individuals_converted(population, children)
-            children = self.get_fitness(children, main_weight, sum(population))
-
-            # print('Hijos con fitness')
-            # # self.print_indivuals(children)
-            # print(children)
-            # print('\n\n')
-
-            individuals = individuals + children
-
-            individuals.sort(key = lambda x: x[1], reverse=True)   
-            aux_individuals = list(map(lambda x: x[1], individuals))
-
-
-            # print('Max: {}'.format(max(aux_individuals)))
-            # print('Min: {}'.format(min(aux_individuals)))
-            # print('Promedio: {}'.format(sum(aux_individuals)/len(aux_individuals)))
+            if(len(wrong_indivuals) > 0):
+                wrong_indivuals = self.mutation(wrong_indivuals)
+                wrong_indivuals = self.get_individuals_converted(population, wrong_indivuals)
+                wrong_indivuals = self.get_fitness(wrong_indivuals, main_weight, sum(population))
             
+
             
-            individuals = individuals[:10]
-            generation += 1
+            better_indivuals = better_indivuals + children
+            individuals = better_indivuals + wrong_indivuals
+            individuals.sort(key = lambda x: x[2], reverse=True)   
+            aux_individuals = list(map(lambda x: x[2], individuals))
+
+            # print('Better: {}'.format(better_indivuals))
+            # print('Wrong: {}'.format(wrong_indivuals))
+
             list_fitness.append(max(aux_individuals))
             list_fiteness_wrong.append(min(aux_individuals))
             list_fitness_mean.append(sum(aux_individuals)/len(aux_individuals))
 
+            individuals = individuals[0:20]
 
-            if(max(aux_individuals) >= 0.8):
-                flag = False
+            if(individuals[0][2] >= 0.8):
+                print('Better: {}'.format(individuals[0]))
+                bandera = False
             else:
                 individuals = list(map(lambda x: x[0], individuals))
 
-            # print('\nPoblacion con fitness-ordenados')
-            # # self.print_indivuals(individuals)
-            # print(individuals)
+            i += 1
 
-        print('M: {}'.format(len(list_fitness)))
-        print('m: {}'.format(len(list_fiteness_wrong)))
-        print('X: {}'.format(len(list_fitness_mean)))
-
-        print('Better fitness: {}'.format(max(list_fitness)))
-        print('Generacions: {}'.format(generation))
-        print('s: {}'.format(len(list_fitness)))
-        print('Termine')
-        # self.draw_chart(list_fitness, generation)
         self.draw_chart_all(list_fitness_mean, list_fitness, list_fiteness_wrong, generation)
+        print('Generacions: {}'.format(generation))
+        print('Termine')
+
     def get_fitness(self, indivuals, main_weight, sum_population):
         amount_indivuals = len(indivuals)
         individuals_fitness = []
         for i in range(amount_indivuals):
             sum_indivuals = sum(indivuals[i][1])
+            #print(sum_indivuals)
             if(sum_indivuals <= main_weight):
                 fitness = 1 - (((main_weight - sum_indivuals) / main_weight)**0.5)
             else:
@@ -170,31 +147,61 @@ class Application:
                 quotient = ((dividend / divisor) ** 0.0625)
                 fitness = 1 - quotient     
 
-            # individuals_fitness.append((indivuals[i][0], indivuals[i][1], fitness))
-            individuals_fitness.append((indivuals[i][0], fitness))
+            individuals_fitness.append((indivuals[i][0], indivuals[i][1], fitness))
         return individuals_fitness
     
+    def selection(self, indivuals):
+        cantidad_indivios = len(indivuals)
+        better_indivuals, wrong_indivuals = [], []
+        
+        for i in range(cantidad_indivios-3):
+            
+            better, wrongs = self.selection_three_indivuals(indivuals, i)
+
+            better_indivuals.append(better)
+
+            for i in range(len(wrongs)):
+                wrong_indivuals.append(wrongs[i])
+
+            i += 3
+        # print('Better: {}\n'.format(better_indivuals))
+        # print('Wrong: {}'.format(wrong_indivuals))
+
+        return better_indivuals, wrong_indivuals
+
+    def selection_three_indivuals(self, indivuals, i ):
+
+        aux_individuals, iteratior = [], i
+
+        for j in range (3):
+            aux_individuals.append(indivuals[iteratior])
+            iteratior += 1
+
+        aux_individuals.sort(key = lambda x: x[2], reverse=True)
+
+
+        # print('Better: {}'.format(aux_individuals[0]))
+        # print('Wronger: {}'.format(aux_individuals[1:]))
+        # print('\n')
+
+        return aux_individuals[0], aux_individuals[1:]
+
     def crossover(self, list_individuals):
-        LENGTH_LIST = len(list_individuals)
+        LENGTH_LIST, j = len(list_individuals), 0
         children = []
 
         for i in range (LENGTH_LIST-1):
-            binaries_father, fitness_father = list_individuals[i]
-
+            
+            binaries_father, _, fitness_father = list_individuals[i]
             j = i + 1
 
             while j < LENGTH_LIST:
-                probability_random = random.random()
-                if(fitness_father > probability_random):
-                    # print('\nApareamiento')
-                    binaries_mother, fitness_mother = list_individuals[j]
-                    # print('P_f:{} , F_f: {}'.format(binaries_father, fitness_father))
-                    # print('P_m:{} , F_m: {}'.format(binaries_mother, fitness_mother))
+                if(fitness_father > random.random()):
+                    binaries_mother, _, _ = list_individuals[j]
                     first_children, second_children = self.get_children(binaries_father, binaries_mother)
                     children.append(first_children); children.append(second_children)
-
                 j += 1
-
+        
         return children
 
     def get_children(self, binarie_father, binarie_mother):
@@ -253,71 +260,24 @@ class Application:
 
         return list_point_crossover
 
-    def mutacion(self, _lista_hijos_binarios, probabilidad_mutar_individuo, probabilidad_mutar_gen):
-        lista_hijos_binarios, TAMANIO_LISTA_HIJOS, lista_hijos_binarios_mutados = np.copy(_lista_hijos_binarios), len(_lista_hijos_binarios), []
+    def mutation(self, indivuals):
 
-        for i in range(TAMANIO_LISTA_HIJOS):
-            random_probabilidad_mutacion = random.random()
-            if(probabilidad_mutar_individuo > random_probabilidad_mutacion):
-                #print("Hm: {}".format(lista_hijos_binarios[i]))
-                list_individuo = list(map(lambda individuo: self.mutar_gen(individuo, probabilidad_mutar_gen), lista_hijos_binarios[i]))
-                # print('LHC: {}'.format(list_individuo))
-                list_individuo = ''.join(str(individuo) for individuo in list_individuo)
-                list_individuo = list(map(int, list_individuo))
-                lista_hijos_binarios_mutados.append(np.asarray(list_individuo))
-                #print('LHC: {}'.format(lista_hijos_binarios_mutados))
-            else:
-                list_individuo = list(map(int, lista_hijos_binarios[i]))
-                lista_hijos_binarios_mutados.append(np.asarray(list_individuo))
-
-        #print("Mutados: {}".format(lista_hijos_binarios_mutados))
-
-        return lista_hijos_binarios_mutados
-    
-    def mutar_gen(self, individuo, probabilidad_mutar_gen):
-        random_probabilidad = random.random()
-        #print('Individuo:{}'.format(individuo))
-        #print("PG:{}, RP:{}".format(probabilidad_mutar_gen, random_probabilidad))
-        individuo = int(individuo)
-        if(probabilidad_mutar_gen > random_probabilidad):
-            if individuo == 0:
-                #print("Ahora es: 1")
-                return 1
-            else: 
-                #print("Ahora es: 0")
-                return 0
-        #print("Lo mismo: {}".fomat(individuo))
-        return individuo   
-
-    def mutation(self, least_value, indivuals):
-        
-        # print('\n\nIndivuals actuales')
-        # print(indivuals)
-
-        for i in range(len(least_value)):
-            if(random.random() > 0.6):
-                if(least_value[i] == 0):
-                    least_value[i] = 1
-                else:
-                    least_value[i] = 0
+        aux_individuals = []
 
         for i in range(len(indivuals)):
-            for j in range(len(least_value)):
-                if(random.random() > 0.5):
-                    if(indivuals[i][j] == 0):
-                        indivuals[i][j] = 1
+            binarios, _, fitness = indivuals[i]
+            size_candidato = len(binarios)
+            for j in range(size_candidato):
+                position = random.randint(0,size_candidato-1)
+                if(0.6 > random.random()):
+                    if(binarios[position] == 0):
+                        binarios[position] = 1
                     else:
-                        indivuals[i][j] = 0
+                        binarios[position] = 0
 
-        indivuals.append(least_value)
+            aux_individuals.append(binarios)
 
-        return indivuals
-
-    def print_indivuals(self, indivuals):
-        length_indivuals = len(indivuals)
-        for i in range(length_indivuals):
-            binaries, fitness = indivuals[i]
-            # print('P:{}, F: {}'.format(binaries, fitness))
+        return aux_individuals
 
     def draw_chart(self, list_fitness, amount_generation):
         amount_generation = len(list_fitness)
@@ -347,7 +307,7 @@ class Application:
         for i in range(CANTIDAD_GENERACIONES):
             lista_generaciones.append(i+1)
 
-        print('CG: {}'.format(lista_generaciones))
+        # print('CG: {}'.format(lista_generaciones))
 
         #print('Min: {}'.format(min(list_media_mejor + list_media_peor + list_media)))
         #print('Max: {}'.format(max(list_media_mejor + list_media_peor + list_media)))
