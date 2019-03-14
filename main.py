@@ -42,7 +42,7 @@ class Application:
             return False
 
     def create_population(self, size_chromosome, main_weight):
-        return np.random.randint(low=1, high=main_weight*0.5, size=size_chromosome)
+        return np.random.randint(low=1, high=main_weight*0.8, size=size_chromosome)
 
     def create_individuals(self, size_chromosome, amoun_population):
         flag, exit_zero = True, False
@@ -76,52 +76,58 @@ class Application:
         return individuals_converted_list
         
     def start_generic_algorithms(self, size_chromosome, main_weight, amoun_population):
-        bandera, generation = True, 0
+        bandera, generation, i = True, 0, 0
         list_fitness, list_fiteness_wrong, list_fitness_mean = [], [], []
         #Initial population
         population = self.create_population(size_chromosome, main_weight)
         individuals = self.create_individuals(size_chromosome, amoun_population)
 
-        while (bandera):
+        while (bandera and i < 100):
             generation += 1
             #Fitness function
             individuals = self.get_individuals_converted(population, individuals)
             individuals = self.get_fitness(individuals, main_weight, sum(population))
             individuals.sort(key = lambda x: x[2], reverse=True)   
+
+            #Selection
+            better_indivuals, wrong_indivuals =  self.selection(individuals)
+
+            #Crossover better
+            children = self.aux_crossover(better_indivuals)
+
+            if(len(children) > 0):
+                children = self.get_individuals_converted(population, children)
+                children = self.get_fitness(children, main_weight, sum(population))
+            
+
+            if(len(wrong_indivuals) > 0):
+                wrong_indivuals = self.mutation(wrong_indivuals)
+                wrong_indivuals = self.get_individuals_converted(population, wrong_indivuals)
+                wrong_indivuals = self.get_fitness(wrong_indivuals, main_weight, sum(population))
+            
+
+            
+            better_indivuals = better_indivuals + children
+            individuals = better_indivuals + wrong_indivuals
+            individuals.sort(key = lambda x: x[2], reverse=True)   
             aux_individuals = list(map(lambda x: x[2], individuals))
+
+            # print('Better: {}'.format(better_indivuals))
+            # print('Wrong: {}'.format(wrong_indivuals))
 
             list_fitness.append(max(aux_individuals))
             list_fiteness_wrong.append(min(aux_individuals))
             list_fitness_mean.append(sum(aux_individuals)/len(aux_individuals))
 
+            individuals = individuals[0:20]
+
             if(individuals[0][2] >= 0.8):
                 bandera = False
             else:
-                # print('Indivuals')
-                # print(individuals)
+                individuals = list(map(lambda x: x[0], individuals))
 
-                #Selection
-                individuals = individuals[:3]
+            i += 1
 
-                # print('\n\nSeleccition')
-                # print(individuals)
-                
-                #Crossover
-                aux_indivuals = self.crossover(individuals)
-
-                #Crossover 
-                individuals = self.mutation(individuals[2][0], aux_indivuals)
-
-                # print('Indivuals select:')
-                # print(individuals)
-
-                #Get fitness of next generations
-                # individuals = self.get_individuals_converted(population, individuals)
-                # individuals = self.get_fitness(individuals, main_weight, sum(population))
-
-                # print('Indivuals fitness')
-                # print(individuals)
-        
         self.draw_chart_all(list_fitness_mean, list_fitness, list_fiteness_wrong, generation)
         print('Generacions: {}'.format(generation))
         print('Termine')
@@ -146,40 +152,77 @@ class Application:
             #print(sumador)
         return individuals_fitness
     
-    def crossover(self, indivuals):
+    def selection(self, indivuals):
+        cantidad_indivios = len(indivuals)
+        better_indivuals, wrong_indivuals = [], []
+        
+        for i in range(cantidad_indivios-3):
+            
+            better, wrongs = self.selection_three_indivuals(indivuals, i)
+
+            better_indivuals.append(better)
+
+            for i in range(len(wrongs)):
+                wrong_indivuals.append(wrongs[i])
+
+            i += 3
+        # print('Better: {}\n'.format(better_indivuals))
+        # print('Wrong: {}'.format(wrong_indivuals))
+
+        return better_indivuals, wrong_indivuals
+
+    def selection_three_indivuals(self, indivuals, i ):
+
+        aux_individuals, iteratior = [], i
+
+        for j in range (3):
+            aux_individuals.append(indivuals[iteratior])
+            iteratior += 1
+
+        aux_individuals.sort(key = lambda x: x[2], reverse=True)
+
+
+        # print('Better: {}'.format(aux_individuals[0]))
+        # print('Wronger: {}'.format(aux_individuals[1:]))
+        # print('\n')
+
+        return aux_individuals[0], aux_individuals[1:]
+
+    def aux_crossover(self, list_individuals):
+        LENGTH_LIST = len(list_individuals)
+        children = []
+
+        for i in range (LENGTH_LIST-1):
+            binaries_father, _, _ = list_individuals[i]
+            binaries_mother, _, _ = list_individuals[i+1] 
+            
+            children.append(self.crossover(binaries_father, binaries_mother))
+
+        return children
+
+    def crossover(self, first_indivual, second_indivual):
         aux_indivuals = []
-        first_indivual = indivuals[0][0]
-        second_indivual = indivuals[1][0]
         third_indivual = np.concatenate((first_indivual[:8], second_indivual[8:]), axis = 0)
 
-        aux_indivuals.append(first_indivual)
-        aux_indivuals.append(third_indivual)
+        return third_indivual
 
-        return aux_indivuals
+    def mutation(self, indivuals):
 
-    def mutation(self, least_value, indivuals):
-        
-        #print('\n\nIndivuals actuales')
-        #print(indivuals)
-
-        for i in range(len(least_value)):
-            if(random.random() < 0.6):
-                if(least_value[i] == 0):
-                    least_value[i] = 1
-                else:
-                    least_value[i] = 0
+        aux_individuals = []
 
         for i in range(len(indivuals)):
-            for j in range(len(least_value)):
-                if(random.random() > 0.5):
-                    if(indivuals[i][j] == 0):
-                        indivuals[i][j] = 1
+            binarios, _, fitness = indivuals[i]
+            size_candidato = len(binarios)
+            for j in range(size_candidato):
+                if(fitness > random.random()):
+                    if(binarios[j] == 0):
+                        binarios[j] = 1
                     else:
-                        indivuals[i][j] = 0
+                        binarios[j] = 0
 
-        indivuals.append(least_value)
+            aux_individuals.append(binarios)
 
-        return indivuals
+        return aux_individuals
 
     def draw_chart(self, list_fitness, amount_generation):
         amount_generation = len(list_fitness)
@@ -209,7 +252,7 @@ class Application:
         for i in range(CANTIDAD_GENERACIONES):
             lista_generaciones.append(i+1)
 
-        print('CG: {}'.format(lista_generaciones))
+        # print('CG: {}'.format(lista_generaciones))
 
         #print('Min: {}'.format(min(list_media_mejor + list_media_peor + list_media)))
         #print('Max: {}'.format(max(list_media_mejor + list_media_peor + list_media)))

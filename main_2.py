@@ -40,7 +40,7 @@ class Application:
             return False
 
     def create_population(self, size_chromosome, main_weight):
-        return np.random.randint(low=10, high=main_weight-100, size=size_chromosome)
+        return np.random.randint(low=10, high=main_weight*0.8, size=size_chromosome)
 
     def create_individuals(self, size_chromosome, amoun_population):
         flag, exit_zero = True, False
